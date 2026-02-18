@@ -3,7 +3,10 @@ use std::collections::{HashMap, HashSet};
 
 use crate::model::{BuildGraph, CrateNode, DepEdge};
 
-pub fn load_dependency_graph(manifest_path: &str) -> anyhow::Result<BuildGraph> {
+pub fn load_dependency_graph(
+    manifest_path: &str,
+    include_deps: bool,
+) -> anyhow::Result<BuildGraph> {
     let metadata = MetadataCommand::new()
         .manifest_path(manifest_path)
         .exec()?;
@@ -21,9 +24,9 @@ pub fn load_dependency_graph(manifest_path: &str) -> anyhow::Result<BuildGraph> 
     let mut nodes = HashMap::new();
     let mut edges = Vec::new();
 
-    // Only include workspace members.
     for node in &resolve.nodes {
-        if !ws_members.contains(&node.id) {
+        let is_ws = ws_members.contains(&node.id);
+        if !include_deps && !is_ws {
             continue;
         }
         let Some(pkg) = pkg_map.get(&node.id) else {
@@ -37,7 +40,7 @@ pub fn load_dependency_graph(manifest_path: &str) -> anyhow::Result<BuildGraph> 
                 id: crate_id.clone(),
                 name: pkg.name.clone(),
                 version: pkg.version.to_string(),
-                is_workspace_member: true,
+                is_workspace_member: is_ws,
                 duration_ms: None,
                 start_ms: None,
                 fresh: false,
@@ -45,9 +48,9 @@ pub fn load_dependency_graph(manifest_path: &str) -> anyhow::Result<BuildGraph> 
             },
         );
 
-        // Only include edges between workspace members.
         for dep in &node.deps {
-            if ws_members.contains(&dep.pkg) {
+            let dep_included = include_deps || ws_members.contains(&dep.pkg);
+            if dep_included {
                 let dep_kinds: Vec<String> = dep
                     .dep_kinds
                     .iter()

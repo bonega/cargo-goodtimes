@@ -15,28 +15,38 @@ fn main() -> anyhow::Result<()> {
     let manifest_path = resolve_manifest(&args.manifest_path)?;
     tracing::info!("using manifest: {manifest_path}");
 
-    let mut graph = cargo_ops::metadata::load_dependency_graph(&manifest_path)?;
+    let mut graph =
+        cargo_ops::metadata::load_dependency_graph(&manifest_path, args.include_deps)?;
     tracing::info!("loaded {} crates", graph.nodes.len());
 
-    // Ensure third-party deps are compiled before we clean workspace crates.
-    tracing::info!("Pre-building dependencies...");
-    cargo_ops::build::prebuild_deps(
-        &manifest_path,
-        &args.profile,
-        &args.features,
-        args.all_features,
-    )?;
+    if args.include_deps {
+        // Full clean so third-party deps are also recompiled and timed.
+        tracing::info!("cleaning all crates…");
+        let status = std::process::Command::new("cargo")
+            .args(["clean", "--manifest-path", &manifest_path])
+            .status()?;
+        anyhow::ensure!(status.success(), "cargo clean failed");
+    } else {
+        // Ensure third-party deps are compiled before we clean workspace crates.
+        tracing::info!("Pre-building dependencies...");
+        cargo_ops::build::prebuild_deps(
+            &manifest_path,
+            &args.profile,
+            &args.features,
+            args.all_features,
+        )?;
 
-    // Clean only workspace crates so external deps stay cached.
-    let ws_packages = cargo_ops::metadata::workspace_package_names(&manifest_path)?;
-    tracing::info!("cleaning {} workspace crate(s)…", ws_packages.len());
-    let mut clean_cmd = std::process::Command::new("cargo");
-    clean_cmd.args(["clean", "--manifest-path", &manifest_path]);
-    for pkg in &ws_packages {
-        clean_cmd.args(["-p", pkg]);
+        // Clean only workspace crates so external deps stay cached.
+        let ws_packages = cargo_ops::metadata::workspace_package_names(&manifest_path)?;
+        tracing::info!("cleaning {} workspace crate(s)…", ws_packages.len());
+        let mut clean_cmd = std::process::Command::new("cargo");
+        clean_cmd.args(["clean", "--manifest-path", &manifest_path]);
+        for pkg in &ws_packages {
+            clean_cmd.args(["-p", pkg]);
+        }
+        let status = clean_cmd.status()?;
+        anyhow::ensure!(status.success(), "cargo clean failed");
     }
-    let status = clean_cmd.status()?;
-    anyhow::ensure!(status.success(), "cargo clean failed");
 
     // Run an initial build to collect timing data.
     tracing::info!("running initial build…");

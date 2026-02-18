@@ -25,6 +25,10 @@ pub struct Args {
     #[arg(long)]
     pub all_features: bool,
 
+    /// Include third-party dependencies in the chart.
+    #[arg(long)]
+    pub include_deps: bool,
+
     /// Don't open browser automatically.
     #[arg(long)]
     pub no_open: bool,

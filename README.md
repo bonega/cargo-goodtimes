@@ -38,6 +38,9 @@ cargo goodtimes --features feat1,feat2
 # Enable all features
 cargo goodtimes --all-features
 
+# Include third-party dependencies in the chart
+cargo goodtimes --include-deps
+
 # Don't open the browser automatically
 cargo goodtimes --no-open
 ```
@@ -50,5 +53,4 @@ The tool will:
 
 ## Future improvements
 
-- **All dependencies:** Currently only workspace crates are cleaned and timed. An option to include all dependencies may be added later.
 - **Machine-readable timings:** Timing data is extracted by parsing the undocumented `UNIT_DATA` embedded in cargo's `--timings` HTML output, which may change between Rust versions. Cargo's `--timings=json` is currently nightly-only — once stabilized, this tool can switch to it for a more reliable data source.
