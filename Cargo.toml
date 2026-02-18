@@ -7,6 +7,7 @@ repository = "https://github.com/bonega/cargo-goodtimes"
 readme = "README.md"
 keywords = ["cargo", "build", "timing", "profiling", "compilation"]
 categories = ["development-tools::cargo-plugins", "development-tools::profiling"]
+license = "MIT"
 exclude = ["frontend/node_modules", ".envrc", ".direnv", "flake.*"]
 
 [[bin]]
