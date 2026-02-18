@@ -30,12 +30,13 @@ fn main() -> anyhow::Result<()> {
     // Clean only workspace crates so external deps stay cached.
     let ws_packages = cargo_ops::metadata::workspace_package_names(&manifest_path)?;
     tracing::info!("cleaning {} workspace crate(s)…", ws_packages.len());
+    let mut clean_cmd = std::process::Command::new("cargo");
+    clean_cmd.args(["clean", "--manifest-path", &manifest_path]);
     for pkg in &ws_packages {
-        let status = std::process::Command::new("cargo")
-            .args(["clean", "--manifest-path", &manifest_path, "-p", pkg])
-            .status()?;
-        anyhow::ensure!(status.success(), "cargo clean -p {pkg} failed");
+        clean_cmd.args(["-p", pkg]);
     }
+    let status = clean_cmd.status()?;
+    anyhow::ensure!(status.success(), "cargo clean failed");
 
     // Run an initial build to collect timing data.
     tracing::info!("running initial build…");
