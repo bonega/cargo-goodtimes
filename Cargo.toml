@@ -1,6 +1,6 @@
 [package]
 name = "cargo-goodtimes"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "Interactive compilation timing analyzer — visualizes the critical path as a Gantt chart"
 repository = "https://github.com/bonega/cargo-goodtimes"
