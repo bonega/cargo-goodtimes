@@ -17,16 +17,9 @@ struct UnitTiming {
     duration: f64, // seconds
 }
 
-pub fn run_build(
-    manifest_path: &str,
-    profile: &str,
-    features: &[String],
-    all_features: bool,
-) -> anyhow::Result<()> {
-    let mut cmd = Command::new("cargo");
+/// Apply shared cargo check flags: manifest-path, profile, and features.
+fn apply_common_args(cmd: &mut Command, manifest_path: &str, profile: &str, features: &[String], all_features: bool) {
     cmd.arg("check")
-        .arg("--message-format=json")
-        .arg("--timings")
         .arg("--manifest-path")
         .arg(manifest_path);
 
@@ -41,6 +34,32 @@ pub fn run_build(
     } else if !features.is_empty() {
         cmd.arg("--features").arg(features.join(","));
     }
+}
+
+/// Run `cargo check` without `--timings` to ensure third-party deps are compiled.
+pub fn prebuild_deps(
+    manifest_path: &str,
+    profile: &str,
+    features: &[String],
+    all_features: bool,
+) -> anyhow::Result<()> {
+    let mut cmd = Command::new("cargo");
+    apply_common_args(&mut cmd, manifest_path, profile, features, all_features);
+
+    let status = cmd.status()?;
+    anyhow::ensure!(status.success(), "cargo check (pre-build deps) failed");
+    Ok(())
+}
+
+pub fn run_build(
+    manifest_path: &str,
+    profile: &str,
+    features: &[String],
+    all_features: bool,
+) -> anyhow::Result<()> {
+    let mut cmd = Command::new("cargo");
+    apply_common_args(&mut cmd, manifest_path, profile, features, all_features);
+    cmd.arg("--message-format=json").arg("--timings");
 
     cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 

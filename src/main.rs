@@ -18,6 +18,15 @@ fn main() -> anyhow::Result<()> {
     let mut graph = cargo_ops::metadata::load_dependency_graph(&manifest_path)?;
     tracing::info!("loaded {} crates", graph.nodes.len());
 
+    // Ensure third-party deps are compiled before we clean workspace crates.
+    tracing::info!("Pre-building dependencies...");
+    cargo_ops::build::prebuild_deps(
+        &manifest_path,
+        &args.profile,
+        &args.features,
+        args.all_features,
+    )?;
+
     // Clean only workspace crates so external deps stay cached.
     let ws_packages = cargo_ops::metadata::workspace_package_names(&manifest_path)?;
     tracing::info!("cleaning {} workspace crate(s)…", ws_packages.len());
