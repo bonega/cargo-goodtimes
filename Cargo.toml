@@ -1,0 +1,25 @@
+[package]
+name = "cargo-goodtimes"
+version = "0.1.0"
+edition = "2024"
+description = "Interactive compilation timing analyzer — visualizes the critical path as a Gantt chart"
+repository = "https://github.com/bonega/cargo-goodtimes"
+readme = "README.md"
+keywords = ["cargo", "build", "timing", "profiling", "compilation"]
+categories = ["development-tools::cargo-plugins", "development-tools::profiling"]
+exclude = ["frontend/node_modules", ".envrc", ".direnv", "flake.*"]
+
+[[bin]]
+name = "cargo-goodtimes"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+cargo_metadata = "0.19"
+clap = { version = "4", features = ["derive"] }
+rust-embed = "8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+webbrowser = "1"
