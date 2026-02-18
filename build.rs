@@ -9,7 +9,20 @@ fn main() {
 
     let frontend_dir = "frontend";
 
-    // Try to run bun. If unavailable (or SKIP_BUN=1), fall back to prebuilt assets.
+    let has_assets = std::fs::read_dir("frontend/dist/assets")
+        .map(|entries| {
+            entries
+                .flatten()
+                .any(|e| e.path().extension().is_some_and(|ext| ext == "js"))
+        })
+        .unwrap_or(false);
+
+    // If prebuilt assets exist, skip bun entirely. This is required for cargo publish
+    // (build scripts must not modify the source tree) and allows installing without bun.
+    if has_assets {
+        return;
+    }
+
     let skip_bun = std::env::var("SKIP_BUN").is_ok_and(|v| v == "1");
     let bun_available = !skip_bun && Command::new("bun")
         .arg("--version")
@@ -18,22 +31,11 @@ fn main() {
         .status()
         .is_ok_and(|s| s.success());
 
-    if !bun_available {
-        let has_assets = std::fs::read_dir("frontend/dist/assets")
-            .map(|entries| {
-                entries
-                    .flatten()
-                    .any(|e| e.path().extension().is_some_and(|ext| ext == "js"))
-            })
-            .unwrap_or(false);
-
-        assert!(
-            has_assets,
-            "bun is not installed and no prebuilt frontend assets found in frontend/dist/assets. \
-             Install bun (https://bun.sh) or use a release that includes prebuilt assets."
-        );
-        return;
-    }
+    assert!(
+        bun_available,
+        "No prebuilt frontend assets found in frontend/dist/assets and bun is not installed. \
+         Install bun (https://bun.sh) and run `bun run build` in the frontend/ directory."
+    );
 
     let status = Command::new("bun")
         .args(["install", "--frozen-lockfile"])
