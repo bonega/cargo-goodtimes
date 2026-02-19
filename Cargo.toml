@@ -8,7 +8,22 @@ readme = "README.md"
 keywords = ["cargo", "build", "timing", "profiling", "compilation"]
 categories = ["development-tools::cargo-plugins", "development-tools::profiling"]
 license = "MIT"
-exclude = ["frontend/node_modules", ".envrc", ".direnv", "flake.*"]
+exclude = [
+  "frontend/node_modules",
+  "frontend/src",
+  "frontend/index.html",
+  "frontend/package.json",
+  "frontend/tsconfig.json",
+  "frontend/vite.config.ts",
+  "frontend/bun.lock",
+  "frontend/.gitignore",
+  "bun.lock",
+  "package.json",
+  "screenshot.png",
+  ".envrc",
+  ".direnv",
+  "flake.*",
+]
 
 [[bin]]
 name = "cargo-goodtimes"
