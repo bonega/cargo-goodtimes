@@ -317,10 +317,34 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
       criticalPath = recomputeCriticalPath(graph.nodes, activeEdges);
     }
 
+    // Hide crates that become leaves through edge removal.
+    // Crates that were already leaves in the original graph are kept.
+    let reachable: Set<string> | null = null;
+    if (hasEdgeChanges) {
+      // Find original leaves: crates with no dependents in the original graph.
+      const originalDependents = new Set<string>();
+      for (const e of graph.edges) originalDependents.add(e.to);
+      const originalLeaves = Object.keys(graph.nodes).filter(
+        (id) => !originalDependents.has(id),
+      );
+
+      // BFS from original leaves following active deps.
+      reachable = new Set<string>();
+      const queue = [...originalLeaves];
+      while (queue.length > 0) {
+        const id = queue.pop()!;
+        if (reachable.has(id)) continue;
+        reachable.add(id);
+        for (const depId of deps.get(id) ?? []) {
+          queue.push(depId);
+        }
+      }
+    }
+
     const criticalSet = new Set(criticalPath);
 
     const entries: TimelineEntry[] = Object.values(graph.nodes)
-      .filter((n) => n.duration_ms !== null && n.start_ms !== null)
+      .filter((n) => n.duration_ms !== null && n.start_ms !== null && (!reachable || reachable.has(n.id)))
       .map((n) => ({
         node: n,
         startMs: startTimeMap?.get(n.id) ?? n.start_ms!,
