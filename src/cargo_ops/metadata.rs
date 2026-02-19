@@ -1,7 +1,7 @@
 use cargo_metadata::{MetadataCommand, PackageId};
 use std::collections::{HashMap, HashSet};
 
-use crate::model::{BuildGraph, CrateNode, DepEdge};
+use crate::model::{BuildGraph, CrateId, CrateNode, DepEdge};
 
 pub fn load_dependency_graph(
     manifest_path: &str,
@@ -18,12 +18,13 @@ pub fn load_dependency_graph(
         metadata.packages.iter().map(|p| (&p.id, p)).collect();
 
     // Map PackageId to a short, path-free identifier.
-    let short_id = |pkg_id: &PackageId| -> String {
+    let short_id = |pkg_id: &PackageId| -> CrateId {
         let pkg = pkg_map.get(pkg_id);
         match pkg {
             Some(p) => format!("{}@{}", p.name, p.version),
             None => pkg_id.repr.clone(),
         }
+        .into()
     };
 
     let ws_members: HashSet<&PackageId> = metadata.workspace_members.iter().collect();

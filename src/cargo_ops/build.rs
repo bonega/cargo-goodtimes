@@ -5,7 +5,7 @@ use std::process::{Command, Stdio};
 
 use cargo_metadata::Message;
 
-use crate::model::{BuildGraph, CrateId};
+use crate::model::{BuildGraph, CrateId, Milliseconds};
 
 /// Per-unit timing extracted from cargo's --timings HTML.
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -123,8 +123,8 @@ pub fn apply_timings(graph: &mut BuildGraph, manifest_path: &str) -> anyhow::Res
         let key = (node.name.clone(), node.version.clone());
         let timing = lib_timings.get(&key).or_else(|| all_timings.get(&key));
         if let Some(&(start, duration)) = timing {
-            node.start_ms = Some(start * 1000.0);
-            node.duration_ms = Some(duration * 1000.0);
+            node.start_ms = Some((start * 1000.0).into());
+            node.duration_ms = Some((duration * 1000.0).into());
             node.fresh = duration < 0.001; // effectively zero = cached
         }
     }
@@ -166,23 +166,26 @@ fn compute_critical_path(graph: &mut BuildGraph) {
         dependents.entry(&edge.to).or_default().push(&edge.from);
     }
 
-    let mut cost: HashMap<CrateId, f64> = HashMap::new();
+    let mut cost: HashMap<CrateId, Milliseconds> = HashMap::new();
     let mut next_on_path: HashMap<CrateId, CrateId> = HashMap::new();
 
     fn longest(
         id: &CrateId,
         nodes: &HashMap<CrateId, crate::model::CrateNode>,
         dependents: &HashMap<&CrateId, Vec<&CrateId>>,
-        cost: &mut HashMap<CrateId, f64>,
+        cost: &mut HashMap<CrateId, Milliseconds>,
         next_on_path: &mut HashMap<CrateId, CrateId>,
-    ) -> f64 {
-        if let Some(&c) = cost.get(id) {
-            return c;
+    ) -> Milliseconds {
+        if let Some(c) = cost.get(id) {
+            return *c;
         }
 
-        let self_dur = nodes.get(id).and_then(|n| n.duration_ms).unwrap_or(0.0);
+        let self_dur = nodes
+            .get(id)
+            .and_then(|n| n.duration_ms)
+            .unwrap_or(Milliseconds::zero());
 
-        let mut best_child_cost = 0.0_f64;
+        let mut best_child_cost = Milliseconds::zero();
         let mut best_child: Option<&CrateId> = None;
 
         if let Some(deps) = dependents.get(id) {
@@ -218,8 +221,8 @@ fn compute_critical_path(graph: &mut BuildGraph) {
 
     let start = leaves.iter().chain(all_ids.iter()).max_by(|a, b| {
         cost.get(*a)
-            .unwrap_or(&0.0)
-            .partial_cmp(cost.get(*b).unwrap_or(&0.0))
+            .unwrap_or(&Milliseconds::zero())
+            .partial_cmp(cost.get(*b).unwrap_or(&Milliseconds::zero()))
             .unwrap_or(std::cmp::Ordering::Equal)
     });
 
