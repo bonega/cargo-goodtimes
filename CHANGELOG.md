@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-02-19
+
+### Changed
+
+- Crate IDs in the output HTML now use `name@version` instead of full file paths, avoiding privacy leaks when sharing.
+- Crates that become unreachable through edge removal are hidden from the chart.
+- Consistent time unit (ms or s) across all timeline ticks.
+- Reduced crate package size by excluding frontend source files and dev artifacts.
+- Embed only JS/CSS assets instead of the full `frontend/dist` directory.
+
+### Fixed
+
+- Bottom status bar no longer overlaps clickable chart rows.
+
 ## [0.2.1] - 2026-02-19
 
 ### Added
