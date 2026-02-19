@@ -80,7 +80,7 @@ export default function App() {
   return (
     <div className="app">
       <main>
-        <div className="graph-container">
+        <div className="graph-container" style={hasChanges ? { paddingBottom: "3rem" } : undefined}>
           <GraphView
             graph={graph}
             onNodeSelect={setSelectedNode}
