@@ -22,6 +22,11 @@ impl Add for Milliseconds {
         Milliseconds(self.0 + other.0)
     }
 }
+impl Milliseconds {
+    pub fn zero() -> Self {
+        Milliseconds(0.0)
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrateNode {
