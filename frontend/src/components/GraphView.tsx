@@ -173,10 +173,15 @@ function recomputeStartTimes(
   }
 
   // Propagate changes forward through dependents.
+  // Guard against cycles: each node is processed at most once.
+  const visited = new Set<string>();
   while (queue.length > 0) {
     const crateId = queue.shift()!;
+    if (visited.has(crateId)) continue;
+    visited.add(crateId);
     const depnIds = activeDependents.get(crateId) ?? [];
     for (const depnId of depnIds) {
+      if (visited.has(depnId)) continue;
       const depnNode = nodes[depnId];
       if (!depnNode || depnNode.duration_ms === null) continue;
 

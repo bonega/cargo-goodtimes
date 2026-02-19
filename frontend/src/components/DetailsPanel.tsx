@@ -19,6 +19,7 @@ function formatDuration(ms: number | null): string {
 export function DetailsPanel({ node, graph, removedEdges, addedEdges, onRemoveEdge, onAddEdge }: Props) {
   const [addQuery, setAddQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightIdx, setHighlightIdx] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Current active deps for this node (original minus removed, plus added).
@@ -59,17 +60,54 @@ export function DetailsPanel({ node, graph, removedEdges, addedEdges, onRemoveEd
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [node, graph, removedEdges]);
 
-  // All crate names for autocomplete, excluding already-active deps and self.
+  // Active edges: original minus removed, plus added.
+  const activeEdges = useMemo(() => {
+    const edges = graph.edges.filter(
+      (e) => !removedEdges.has(`${e.from}|${e.to}`),
+    );
+    for (const key of addedEdges) {
+      const [from, to] = key.split("|");
+      edges.push({ from, to, dep_kinds: [] });
+    }
+    return edges;
+  }, [graph.edges, removedEdges, addedEdges]);
+
+  // Nodes that transitively depend on the selected node — adding any of
+  // these as a dependency would create a cycle.
+  const wouldCycle = useMemo(() => {
+    if (!node) return new Set<string>();
+    // Build reverse map: dependency -> dependents.
+    const dependents = new Map<string, string[]>();
+    for (const e of activeEdges) {
+      if (!dependents.has(e.to)) dependents.set(e.to, []);
+      dependents.get(e.to)!.push(e.from);
+    }
+    // BFS from selected node following reverse edges.
+    const visited = new Set<string>();
+    const queue = [node.id];
+    while (queue.length > 0) {
+      const id = queue.pop()!;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      for (const dep of dependents.get(id) ?? []) {
+        queue.push(dep);
+      }
+    }
+    return visited;
+  }, [node, activeEdges]);
+
+  // All crate names for autocomplete, excluding already-active deps, self,
+  // and any node that would create a cycle.
   const suggestions = useMemo(() => {
     if (!node || !addQuery.trim()) return [];
     const activeSet = new Set(activeDeps.map((d) => d.id));
     activeSet.add(node.id);
     const q = addQuery.toLowerCase();
     return Object.values(graph.nodes)
-      .filter((n) => !activeSet.has(n.id) && n.name.toLowerCase().includes(q))
+      .filter((n) => !activeSet.has(n.id) && !wouldCycle.has(n.id) && n.name.toLowerCase().includes(q))
       .sort((a, b) => a.name.localeCompare(b.name))
       .slice(0, 8);
-  }, [node, graph, activeDeps, addQuery]);
+  }, [node, graph, activeDeps, addQuery, wouldCycle]);
 
   const handleAddDep = useCallback(
     (depId: string) => {
@@ -77,8 +115,26 @@ export function DetailsPanel({ node, graph, removedEdges, addedEdges, onRemoveEd
       onAddEdge(node.id, depId);
       setAddQuery("");
       setShowSuggestions(false);
+      setHighlightIdx(-1);
     },
     [node, onAddEdge],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!showSuggestions || suggestions.length === 0) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setHighlightIdx((i) => (i + 1) % suggestions.length);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlightIdx((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+      } else if (e.key === "Enter" && highlightIdx >= 0) {
+        e.preventDefault();
+        handleAddDep(suggestions[highlightIdx].id);
+      }
+    },
+    [showSuggestions, suggestions, highlightIdx, handleAddDep],
   );
 
   const summary = useMemo(() => {
@@ -202,7 +258,9 @@ export function DetailsPanel({ node, graph, removedEdges, addedEdges, onRemoveEd
           onChange={(e) => {
             setAddQuery(e.target.value);
             setShowSuggestions(true);
+            setHighlightIdx(-1);
           }}
+          onKeyDown={handleKeyDown}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => {
             // Delay to allow click on suggestion.
@@ -211,8 +269,12 @@ export function DetailsPanel({ node, graph, removedEdges, addedEdges, onRemoveEd
         />
         {showSuggestions && suggestions.length > 0 && (
           <ul className="dep-suggestions">
-            {suggestions.map((s) => (
-              <li key={s.id} onMouseDown={() => handleAddDep(s.id)}>
+            {suggestions.map((s, i) => (
+              <li
+                key={s.id}
+                className={i === highlightIdx ? "active" : ""}
+                onMouseDown={() => handleAddDep(s.id)}
+              >
                 {s.name}
               </li>
             ))}

@@ -217,8 +217,9 @@ aside {
   cursor: pointer;
 }
 
-.dep-suggestions li:hover {
-  background: var(--bg-input);
+.dep-suggestions li:hover,
+.dep-suggestions li.active {
+  background: rgba(108, 123, 233, 0.15);
 }
 
 /* Loading / error */
