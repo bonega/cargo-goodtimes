@@ -19,6 +19,15 @@ pub fn load_dependency_graph(
     let pkg_map: HashMap<&PackageId, &cargo_metadata::Package> =
         metadata.packages.iter().map(|p| (&p.id, p)).collect();
 
+    // Map PackageId to a short, path-free identifier.
+    let short_id = |pkg_id: &PackageId| -> String {
+        let pkg = pkg_map.get(pkg_id);
+        match pkg {
+            Some(p) => format!("{}@{}", p.name, p.version),
+            None => pkg_id.repr.clone(),
+        }
+    };
+
     let ws_members: HashSet<&PackageId> = metadata.workspace_members.iter().collect();
 
     let mut nodes = HashMap::new();
@@ -32,7 +41,7 @@ pub fn load_dependency_graph(
         let Some(pkg) = pkg_map.get(&node.id) else {
             continue;
         };
-        let crate_id = node.id.repr.clone();
+        let crate_id = short_id(&node.id);
 
         nodes.insert(
             crate_id.clone(),
@@ -58,7 +67,7 @@ pub fn load_dependency_graph(
                     .collect();
                 edges.push(DepEdge {
                     from: crate_id.clone(),
-                    to: dep.pkg.repr.clone(),
+                    to: short_id(&dep.pkg),
                     dep_kinds,
                 });
             }
@@ -68,7 +77,7 @@ pub fn load_dependency_graph(
     let roots = metadata
         .workspace_members
         .iter()
-        .map(|id| id.repr.clone())
+        .map(|id| short_id(id))
         .collect();
 
     Ok(BuildGraph {
