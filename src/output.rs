@@ -5,7 +5,7 @@ use rust_embed::Embed;
 use crate::model::BuildGraph;
 
 #[derive(Embed)]
-#[folder = "frontend/dist"]
+#[folder = "frontend/dist/assets"]
 struct FrontendAsset;
 
 pub fn write_and_open(graph: &BuildGraph, target_dir: &Path, open: bool) -> anyhow::Result<()> {
@@ -30,19 +30,19 @@ fn generate_html(graph: &BuildGraph) -> anyhow::Result<String> {
     let mut css_source = None;
 
     for filename in FrontendAsset::iter() {
-        if filename.starts_with("assets/") && filename.ends_with(".js") {
+        if filename.ends_with(".js") {
             let file = FrontendAsset::get(&filename)
                 .ok_or_else(|| anyhow::anyhow!("missing embedded file: {filename}"))?;
             js_source = Some(String::from_utf8(file.data.to_vec())?);
-        } else if filename.starts_with("assets/") && filename.ends_with(".css") {
+        } else if filename.ends_with(".css") {
             let file = FrontendAsset::get(&filename)
                 .ok_or_else(|| anyhow::anyhow!("missing embedded file: {filename}"))?;
             css_source = Some(String::from_utf8(file.data.to_vec())?);
         }
     }
 
-    let js = js_source.ok_or_else(|| anyhow::anyhow!("no .js asset found in frontend/dist"))?;
-    let css = css_source.ok_or_else(|| anyhow::anyhow!("no .css asset found in frontend/dist"))?;
+    let js = js_source.ok_or_else(|| anyhow::anyhow!("no .js asset found in frontend/dist/assets"))?;
+    let css = css_source.ok_or_else(|| anyhow::anyhow!("no .css asset found in frontend/dist/assets"))?;
 
     // Serialize graph JSON, escaping </script to prevent premature tag closing.
     let graph_json = serde_json::to_string(graph)?;
