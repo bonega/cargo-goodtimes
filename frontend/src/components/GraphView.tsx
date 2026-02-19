@@ -852,7 +852,7 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
   );
 
 
-  // Generate time grid lines.
+  // Generate time grid lines with a consistent unit across all ticks.
   const gridLines = useMemo(() => {
     if (totalMs === 0) return [];
     const rawStep = totalMs / 10;
@@ -861,9 +861,12 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
     const step =
       candidates.find((c) => totalMs / c <= 12) ??
       candidates[candidates.length - 1];
+    const useSeconds = totalMs >= 1000;
+    const format = (ms: number): string =>
+      useSeconds ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`;
     const lines: { ms: number; label: string }[] = [];
     for (let ms = 0; ms <= totalMs; ms += step) {
-      lines.push({ ms, label: formatMs(ms) });
+      lines.push({ ms, label: format(ms) });
     }
     return lines;
   }, [totalMs]);
