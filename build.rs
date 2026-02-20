@@ -24,12 +24,13 @@ fn main() {
     }
 
     let skip_bun = std::env::var("SKIP_BUN").is_ok_and(|v| v == "1");
-    let bun_available = !skip_bun && Command::new("bun")
-        .arg("--version")
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .status()
-        .is_ok_and(|s| s.success());
+    let bun_available = !skip_bun
+        && Command::new("bun")
+            .arg("--version")
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()
+            .is_ok_and(|s| s.success());
 
     assert!(
         bun_available,

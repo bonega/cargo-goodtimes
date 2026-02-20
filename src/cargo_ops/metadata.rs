@@ -7,9 +7,7 @@ pub fn load_dependency_graph(
     manifest_path: &str,
     include_deps: bool,
 ) -> anyhow::Result<BuildGraph> {
-    let metadata = MetadataCommand::new()
-        .manifest_path(manifest_path)
-        .exec()?;
+    let metadata = MetadataCommand::new().manifest_path(manifest_path).exec()?;
 
     let resolve = metadata
         .resolve
@@ -74,11 +72,7 @@ pub fn load_dependency_graph(
         }
     }
 
-    let roots = metadata
-        .workspace_members
-        .iter()
-        .map(|id| short_id(id))
-        .collect();
+    let roots = metadata.workspace_members.iter().map(short_id).collect();
 
     Ok(BuildGraph {
         nodes,
@@ -95,11 +89,7 @@ pub fn workspace_package_names(manifest_path: &str) -> anyhow::Result<Vec<String
         .no_deps()
         .exec()?;
 
-    let names = metadata
-        .packages
-        .iter()
-        .map(|p| p.name.clone())
-        .collect();
+    let names = metadata.packages.iter().map(|p| p.name.clone()).collect();
 
     Ok(names)
 }

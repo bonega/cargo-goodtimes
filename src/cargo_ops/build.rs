@@ -18,10 +18,14 @@ struct UnitTiming {
 }
 
 /// Apply shared cargo check flags: manifest-path, profile, and features.
-fn apply_common_args(cmd: &mut Command, manifest_path: &str, profile: &str, features: &[String], all_features: bool) {
-    cmd.arg("check")
-        .arg("--manifest-path")
-        .arg(manifest_path);
+fn apply_common_args(
+    cmd: &mut Command,
+    manifest_path: &str,
+    profile: &str,
+    features: &[String],
+    all_features: bool,
+) {
+    cmd.arg("check").arg("--manifest-path").arg(manifest_path);
 
     if profile == "release" {
         cmd.arg("--release");
@@ -86,10 +90,7 @@ pub fn apply_timings(graph: &mut BuildGraph, manifest_path: &str) -> anyhow::Res
     let timing_html = target_dir.join("cargo-timings").join("cargo-timing.html");
 
     if !timing_html.exists() {
-        anyhow::bail!(
-            "timing HTML not found at {}",
-            timing_html.display()
-        );
+        anyhow::bail!("timing HTML not found at {}", timing_html.display());
     }
 
     let html = std::fs::read_to_string(&timing_html)?;
@@ -179,10 +180,7 @@ fn compute_critical_path(graph: &mut BuildGraph) {
             return c;
         }
 
-        let self_dur = nodes
-            .get(id)
-            .and_then(|n| n.duration_ms)
-            .unwrap_or(0.0);
+        let self_dur = nodes.get(id).and_then(|n| n.duration_ms).unwrap_or(0.0);
 
         let mut best_child_cost = 0.0_f64;
         let mut best_child: Option<&CrateId> = None;
@@ -218,15 +216,12 @@ fn compute_critical_path(graph: &mut BuildGraph) {
         longest(id, &graph.nodes, &dependents, &mut cost, &mut next_on_path);
     }
 
-    let start = leaves
-        .iter()
-        .chain(all_ids.iter())
-        .max_by(|a, b| {
-            cost.get(*a)
-                .unwrap_or(&0.0)
-                .partial_cmp(cost.get(*b).unwrap_or(&0.0))
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
+    let start = leaves.iter().chain(all_ids.iter()).max_by(|a, b| {
+        cost.get(*a)
+            .unwrap_or(&0.0)
+            .partial_cmp(cost.get(*b).unwrap_or(&0.0))
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     let mut path = Vec::new();
     if let Some(start) = start {

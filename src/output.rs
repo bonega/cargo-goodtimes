@@ -41,8 +41,10 @@ fn generate_html(graph: &BuildGraph) -> anyhow::Result<String> {
         }
     }
 
-    let js = js_source.ok_or_else(|| anyhow::anyhow!("no .js asset found in frontend/dist/assets"))?;
-    let css = css_source.ok_or_else(|| anyhow::anyhow!("no .css asset found in frontend/dist/assets"))?;
+    let js =
+        js_source.ok_or_else(|| anyhow::anyhow!("no .js asset found in frontend/dist/assets"))?;
+    let css =
+        css_source.ok_or_else(|| anyhow::anyhow!("no .css asset found in frontend/dist/assets"))?;
 
     // Serialize graph JSON, escaping </script to prevent premature tag closing.
     let graph_json = serde_json::to_string(graph)?;
