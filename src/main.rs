@@ -15,8 +15,7 @@ fn main() -> anyhow::Result<()> {
     let manifest_path = resolve_manifest(&args.manifest_path)?;
     tracing::info!("using manifest: {manifest_path}");
 
-    let mut graph =
-        cargo_ops::metadata::load_dependency_graph(&manifest_path, args.include_deps)?;
+    let mut graph = cargo_ops::metadata::load_dependency_graph(&manifest_path, args.include_deps)?;
     tracing::info!("loaded {} crates", graph.nodes.len());
 
     if args.include_deps {
