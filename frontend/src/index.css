@@ -138,7 +138,8 @@ aside {
   text-decoration: line-through;
 }
 
-.dep-remove, .dep-restore {
+.dep-remove,
+.dep-restore {
   flex-shrink: 0;
   width: 20px;
   height: 20px;
@@ -318,7 +319,9 @@ aside {
   bottom: 2px;
   border-radius: 3px;
   cursor: pointer;
-  transition: filter 0.15s, box-shadow 0.15s;
+  transition:
+    filter 0.15s,
+    box-shadow 0.15s;
   display: flex;
   align-items: center;
   overflow: visible;
@@ -414,7 +417,8 @@ aside {
   color: var(--danger);
 }
 
-.btn-compare, .btn-reset {
+.btn-compare,
+.btn-reset {
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 0.3rem 0.75rem;
@@ -451,6 +455,10 @@ aside {
 }
 
 @keyframes fadeOutLine {
-  from { stroke-opacity: 0.7; }
-  to { stroke-opacity: 0; }
+  from {
+    stroke-opacity: 0.7;
+  }
+  to {
+    stroke-opacity: 0;
+  }
 }

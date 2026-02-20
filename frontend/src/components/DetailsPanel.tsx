@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { BuildGraph, CrateNode } from "../lib/types.ts";
 
 interface Props {
@@ -16,7 +16,14 @@ function formatDuration(ms: number | null): string {
   return `${(ms / 1000).toFixed(2)}s`;
 }
 
-export function DetailsPanel({ node, graph, removedEdges, addedEdges, onRemoveEdge, onAddEdge }: Props) {
+export function DetailsPanel({
+  node,
+  graph,
+  removedEdges,
+  addedEdges,
+  onRemoveEdge,
+  onAddEdge,
+}: Props) {
   const [addQuery, setAddQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightIdx, setHighlightIdx] = useState(-1);
@@ -27,8 +34,7 @@ export function DetailsPanel({ node, graph, removedEdges, addedEdges, onRemoveEd
     if (!node) return [];
     const fromOriginal = graph.edges
       .filter(
-        (e) =>
-          e.from === node.id && !removedEdges.has(`${e.from}|${e.to}`),
+        (e) => e.from === node.id && !removedEdges.has(`${e.from}|${e.to}`),
       )
       .map((e) => e.to);
     const fromAdded = [...addedEdges]
@@ -49,8 +55,7 @@ export function DetailsPanel({ node, graph, removedEdges, addedEdges, onRemoveEd
     if (!node) return [];
     return graph.edges
       .filter(
-        (e) =>
-          e.from === node.id && removedEdges.has(`${e.from}|${e.to}`),
+        (e) => e.from === node.id && removedEdges.has(`${e.from}|${e.to}`),
       )
       .map((e) => {
         const depNode = graph.nodes[e.to];
@@ -104,7 +109,12 @@ export function DetailsPanel({ node, graph, removedEdges, addedEdges, onRemoveEd
     activeSet.add(node.id);
     const q = addQuery.toLowerCase();
     return Object.values(graph.nodes)
-      .filter((n) => !activeSet.has(n.id) && !wouldCycle.has(n.id) && n.name.toLowerCase().includes(q))
+      .filter(
+        (n) =>
+          !activeSet.has(n.id) &&
+          !wouldCycle.has(n.id) &&
+          n.name.toLowerCase().includes(q),
+      )
       .sort((a, b) => a.name.localeCompare(b.name))
       .slice(0, 8);
   }, [node, graph, activeDeps, addQuery, wouldCycle]);
@@ -161,7 +171,14 @@ export function DetailsPanel({ node, graph, removedEdges, addedEdges, onRemoveEd
 
     const cpLength = graph.critical_path.length;
 
-    return { totalCrates, builtCrates, cachedCrates, totalMs, longestCrate, cpLength };
+    return {
+      totalCrates,
+      builtCrates,
+      cachedCrates,
+      totalMs,
+      longestCrate,
+      cpLength,
+    };
   }, [graph]);
 
   if (!node) {
@@ -172,13 +189,19 @@ export function DetailsPanel({ node, graph, removedEdges, addedEdges, onRemoveEd
           <dt>Total time</dt>
           <dd>{formatDuration(summary.totalMs)}</dd>
           <dt>Crates</dt>
-          <dd>{summary.totalCrates} ({summary.builtCrates} built, {summary.cachedCrates} cached)</dd>
+          <dd>
+            {summary.totalCrates} ({summary.builtCrates} built,{" "}
+            {summary.cachedCrates} cached)
+          </dd>
           <dt>Critical path</dt>
           <dd>{summary.cpLength} crates</dd>
           {summary.longestCrate && (
             <>
               <dt>Slowest crate</dt>
-              <dd>{summary.longestCrate.name} ({formatDuration(summary.longestCrate.ms)})</dd>
+              <dd>
+                {summary.longestCrate.name} (
+                {formatDuration(summary.longestCrate.ms)})
+              </dd>
             </>
           )}
         </dl>
@@ -217,6 +240,7 @@ export function DetailsPanel({ node, graph, removedEdges, addedEdges, onRemoveEd
           <li key={dep.id}>
             <span className="dep-name">{dep.name}</span>
             <button
+              type="button"
               className="dep-remove"
               onClick={() => onRemoveEdge(node.id, dep.id)}
               title="Remove dependency (what-if)"
@@ -229,14 +253,13 @@ export function DetailsPanel({ node, graph, removedEdges, addedEdges, onRemoveEd
 
       {removedDeps.length > 0 && (
         <>
-          <h3 className="removed-heading">
-            Removed ({removedDeps.length})
-          </h3>
+          <h3 className="removed-heading">Removed ({removedDeps.length})</h3>
           <ul className="dep-list removed">
             {removedDeps.map((dep) => (
               <li key={dep.id}>
                 <span className="dep-name">{dep.name}</span>
                 <button
+                  type="button"
                   className="dep-restore"
                   onClick={() => onAddEdge(node.id, dep.id)}
                   title="Restore dependency"

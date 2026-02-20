@@ -20,6 +20,7 @@
         devShells.default = pkgs.mkShell {
           buildInputs = [
             rustToolchain
+            pkgs.biome
             pkgs.bun
             pkgs.pkg-config
             pkgs.openssl
