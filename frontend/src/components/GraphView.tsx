@@ -1,4 +1,11 @@
-import { useMemo, useRef, useCallback, useState, useLayoutEffect, useEffect } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { BuildGraph, CrateNode } from "../lib/types.ts";
 
 const ROW_HEIGHT = 28;
@@ -31,7 +38,12 @@ function easeInOutQuad(t: number): number {
  * Points are revealed sequentially — each point moves from the previous
  * point's final position to its own, keeping undrawn points at the tip.
  */
-function traceGrowPath(startX: number, startY: number, path: string, t: number): string {
+function traceGrowPath(
+  startX: number,
+  startY: number,
+  path: string,
+  t: number,
+): string {
   const nums = path.match(/-?[\d.]+/g)?.map(Number);
   if (!nums || nums.length < 2) return path;
   if (t >= 1) return path;
@@ -40,7 +52,8 @@ function traceGrowPath(startX: number, startY: number, path: string, t: number):
   const result = new Array(nums.length);
 
   if (t <= 0) {
-    for (let i = 0; i < nums.length; i++) result[i] = i % 2 === 0 ? startX : startY;
+    for (let i = 0; i < nums.length; i++)
+      result[i] = i % 2 === 0 ? startX : startY;
   } else {
     const progress = t * (nPts - 1);
     const done = Math.floor(progress);
@@ -162,7 +175,10 @@ function recomputeStartTimes(
     for (const depId of myDeps) {
       const depNode = nodes[depId];
       if (!depNode || depNode.duration_ms === null) continue;
-      maxDepEnd = Math.max(maxDepEnd, startTimes.get(depId)! + depNode.duration_ms);
+      maxDepEnd = Math.max(
+        maxDepEnd,
+        startTimes.get(depId)! + depNode.duration_ms,
+      );
     }
 
     const current = startTimes.get(crateId)!;
@@ -190,7 +206,10 @@ function recomputeStartTimes(
       for (const depId of depnDeps) {
         const depNode = nodes[depId];
         if (!depNode || depNode.duration_ms === null) continue;
-        maxDepEnd = Math.max(maxDepEnd, startTimes.get(depId)! + depNode.duration_ms);
+        maxDepEnd = Math.max(
+          maxDepEnd,
+          startTimes.get(depId)! + depNode.duration_ms,
+        );
       }
 
       const current = startTimes.get(depnId)!;
@@ -242,7 +261,10 @@ function recomputeCriticalPath(
   let maxId = "";
   let maxVal = 0;
   for (const [id, val] of dp) {
-    if (val > maxVal) { maxVal = val; maxId = id; }
+    if (val > maxVal) {
+      maxVal = val;
+      maxId = id;
+    }
   }
 
   const path: string[] = [];
@@ -255,7 +277,10 @@ function recomputeCriticalPath(
     let bestVal = -1;
     for (const depId of myDeps) {
       const val = dp.get(depId) ?? 0;
-      if (val > bestVal) { bestVal = val; bestDep = depId; }
+      if (val > bestVal) {
+        bestVal = val;
+        bestDep = depId;
+      }
     }
     if (bestDep === "") break;
     current = bestDep;
@@ -271,7 +296,15 @@ interface TimelineEntry {
   isCritical: boolean;
 }
 
-export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRemoveEdge, previewOriginal, onTotalMsChange }: Props) {
+export function GraphView({
+  graph,
+  onNodeSelect,
+  removedEdges,
+  addedEdges,
+  onRemoveEdge,
+  previewOriginal,
+  onTotalMsChange,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -283,9 +316,10 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
 
   // Active edges = original edges minus removed ones, plus added ones.
   const activeEdges = useMemo(() => {
-    const filtered = effectiveRemoved.size === 0
-      ? graph.edges
-      : graph.edges.filter((e) => !effectiveRemoved.has(`${e.from}|${e.to}`));
+    const filtered =
+      effectiveRemoved.size === 0
+        ? graph.edges
+        : graph.edges.filter((e) => !effectiveRemoved.has(`${e.from}|${e.to}`));
     if (effectiveAdded.size === 0) return filtered;
     const extra = [...effectiveAdded].map((key) => {
       const [from, to] = key.split("|");
@@ -313,7 +347,12 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
 
     const hasEdgeChanges = effectiveRemoved.size > 0 || effectiveAdded.size > 0;
     if (hasEdgeChanges) {
-      startTimeMap = recomputeStartTimes(graph.nodes, activeEdges, graph.edges, effectiveRemoved);
+      startTimeMap = recomputeStartTimes(
+        graph.nodes,
+        activeEdges,
+        graph.edges,
+        effectiveRemoved,
+      );
       criticalPath = recomputeCriticalPath(graph.nodes, activeEdges);
     }
 
@@ -344,7 +383,12 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
     const criticalSet = new Set(criticalPath);
 
     const entries: TimelineEntry[] = Object.values(graph.nodes)
-      .filter((n) => n.duration_ms !== null && n.start_ms !== null && (!reachable || reachable.has(n.id)))
+      .filter(
+        (n) =>
+          n.duration_ms !== null &&
+          n.start_ms !== null &&
+          (!reachable || reachable.has(n.id)),
+      )
       .map((n) => ({
         node: n,
         startMs: startTimeMap?.get(n.id) ?? n.start_ms!,
@@ -359,7 +403,7 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
     );
 
     return { entries, totalMs, criticalPath };
-  }, [graph, activeEdges, effectiveRemoved, effectiveAdded]);
+  }, [graph, activeEdges, effectiveRemoved, effectiveAdded, deps]);
 
   // Report totalMs changes to parent (skip during preview to avoid layout thrash).
   useEffect(() => {
@@ -371,7 +415,9 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
   // Map crate ID -> row index for positioning lines.
   const rowIndex = useMemo(() => {
     const map = new Map<string, number>();
-    entries.forEach((e, i) => map.set(e.node.id, i));
+    for (let i = 0; i < entries.length; i++) {
+      map.set(entries[i].node.id, i);
+    }
     return map;
   }, [entries]);
 
@@ -454,8 +500,10 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
     const RX = 0.8;
 
     function stepPath(
-      x1: number, y1: number,
-      x2: number, y2: number,
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
       midX: number,
     ): string {
       // Always produce M L Q L Q L structure for consistent CSS d interpolation.
@@ -540,13 +588,18 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
     easing: "cubic-bezier(0.4, 0, 0.2, 1)",
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: FLIP animation needs to trigger on entries/totalMs changes
   useLayoutEffect(() => {
     const chart = chartRef.current;
     if (!chart) return;
 
     const bars = chart.querySelectorAll<HTMLElement>(".timeline-bar[data-id]");
-    const ticks = chart.querySelectorAll<HTMLElement>(".timeline-tick[data-ms]");
-    const grids = chart.querySelectorAll<HTMLElement>(".timeline-gridline[data-grid-ms]");
+    const ticks = chart.querySelectorAll<HTMLElement>(
+      ".timeline-tick[data-ms]",
+    );
+    const grids = chart.querySelectorAll<HTMLElement>(
+      ".timeline-gridline[data-grid-ms]",
+    );
 
     // Capture all new rects BEFORE starting any animations.
     // getBoundingClientRect reflects WAAPI transforms, so reading after
@@ -600,14 +653,20 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
         const key = el.dataset[attr]!;
         const oldRect = prevRects.get(key);
         if (!oldRect) {
-          el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: "ease" });
+          el.animate([{ opacity: 0 }, { opacity: 1 }], {
+            duration: 300,
+            easing: "ease",
+          });
           continue;
         }
         const newRect = newRects.get(key)!;
         const dx = oldRect.left - newRect.left;
         if (Math.abs(dx) > 0.5) {
           el.animate(
-            [{ transform: `translateX(${dx}px)` }, { transform: "translateX(0)" }],
+            [
+              { transform: `translateX(${dx}px)` },
+              { transform: "translateX(0)" },
+            ],
             ANIM_OPTS,
           );
         }
@@ -634,14 +693,19 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
       const exiting = new Map<string, { d: string; color: string }>();
       for (const [key, d] of prev) {
         if (!depPathMap.has(key)) {
-          const color = key.startsWith("dep|") ? COLOR_LINE_DEP : COLOR_LINE_DEPN;
+          const color = key.startsWith("dep|")
+            ? COLOR_LINE_DEP
+            : COLOR_LINE_DEPN;
           exiting.set(key, { d, color });
         }
       }
       if (exiting.size > 0) {
         setExitingPaths(exiting);
         clearTimeout(exitTimerRef.current);
-        exitTimerRef.current = setTimeout(() => setExitingPaths(new Map()), 500);
+        exitTimerRef.current = setTimeout(
+          () => setExitingPaths(new Map()),
+          500,
+        );
       } else {
         setExitingPaths((prev) => (prev.size > 0 ? new Map() : prev));
       }
@@ -658,7 +722,9 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
 
       for (const [key, path] of depPathMap) {
         const oldD = prev.get(key);
-        const el = svg.querySelector<SVGPathElement>(`.dep-line[data-key="${key}"]`);
+        const el = svg.querySelector<SVGPathElement>(
+          `.dep-line[data-key="${key}"]`,
+        );
         if (!el) continue;
 
         if (oldD && oldD !== path.d) {
@@ -734,11 +800,18 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
 
     if (svg) {
       const toMove: { el: SVGPathElement; from: string; to: string }[] = [];
-      const toEnter: { el: SVGPathElement; sx: number; sy: number; target: string }[] = [];
+      const toEnter: {
+        el: SVGPathElement;
+        sx: number;
+        sy: number;
+        target: string;
+      }[] = [];
 
       for (const line of criticalPathLines) {
         const oldD = prev.get(line.key);
-        const el = svg.querySelector<SVGPathElement>(`.cp-line[data-key="${line.key}"]`);
+        const el = svg.querySelector<SVGPathElement>(
+          `.cp-line[data-key="${line.key}"]`,
+        );
         if (!el) continue;
 
         if (oldD && oldD !== line.d) {
@@ -790,9 +863,16 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
     const svg = svgRef.current;
     if (!svg) return;
 
-    const toExit: { el: SVGPathElement; sx: number; sy: number; original: string }[] = [];
+    const toExit: {
+      el: SVGPathElement;
+      sx: number;
+      sy: number;
+      original: string;
+    }[] = [];
     for (const [key, data] of cpExitingPaths) {
-      const el = svg.querySelector<SVGPathElement>(`.cp-line-exit[data-key="exit-${key}"]`);
+      const el = svg.querySelector<SVGPathElement>(
+        `.cp-line-exit[data-key="exit-${key}"]`,
+      );
       if (!el) continue;
       const m = data.d.match(/^M\s+([\d.-]+)\s+([\d.-]+)/);
       if (m) {
@@ -843,20 +923,16 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
     [onNodeSelect],
   );
 
-  const handleBgClick = useCallback(
-    () => {
-      onNodeSelect(null);
-      setSelectedId(null);
-    },
-    [onNodeSelect],
-  );
-
+  const handleBgClick = useCallback(() => {
+    onNodeSelect(null);
+    setSelectedId(null);
+  }, [onNodeSelect]);
 
   // Generate time grid lines with a consistent unit across all ticks.
   const gridLines = useMemo(() => {
     if (totalMs === 0) return [];
     const rawStep = totalMs / 10;
-    const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const magnitude = 10 ** Math.floor(Math.log10(rawStep));
     const candidates = [1, 2, 5, 10].map((m) => m * magnitude);
     const step =
       candidates.find((c) => totalMs / c <= 12) ??
@@ -874,9 +950,11 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
   const totalHeight = HEADER_HEIGHT + entries.length * (ROW_HEIGHT + ROW_GAP);
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: background click to deselect
     <div
       ref={containerRef}
       className="timeline"
+      role="presentation"
       onClick={handleBgClick}
       onMouseLeave={() => setHoveredId(null)}
       style={{ height: "100%", overflow: "auto" }}
@@ -895,7 +973,14 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
             height: HEADER_HEIGHT,
           }}
         >
-          <div style={{ position: "relative", height: "100%", marginLeft: PADDING_LEFT, marginRight: PADDING_RIGHT }}>
+          <div
+            style={{
+              position: "relative",
+              height: "100%",
+              marginLeft: PADDING_LEFT,
+              marginRight: PADDING_RIGHT,
+            }}
+          >
             {gridLines.map((line) => (
               <span
                 key={line.ms}
@@ -931,7 +1016,10 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
         </div>
 
         {/* SVG overlay for dependency curves */}
-        {(depPathMap.size > 0 || exitingPaths.size > 0 || criticalPathLines.length > 0 || cpExitingPaths.size > 0) && (
+        {(depPathMap.size > 0 ||
+          exitingPaths.size > 0 ||
+          criticalPathLines.length > 0 ||
+          cpExitingPaths.size > 0) && (
           <div
             style={{
               position: "absolute",
@@ -950,6 +1038,7 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
               viewBox={`0 0 100 ${totalHeight}`}
               preserveAspectRatio="none"
             >
+              <title>Dependency graph</title>
               {criticalPathLines.map((line) => (
                 <path
                   key={line.key}
@@ -1011,14 +1100,11 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
           const top = HEADER_HEIGHT + i * (ROW_HEIGHT + ROW_GAP);
           const leftPct = totalMs > 0 ? (entry.startMs / totalMs) * 100 : 0;
           const widthPct =
-            totalMs > 0
-              ? Math.max((entry.durationMs / totalMs) * 100, 0.3)
-              : 0;
+            totalMs > 0 ? Math.max((entry.durationMs / totalMs) * 100, 0.3) : 0;
           const isDimmed =
             relatedIds !== null && !relatedIds.has(entry.node.id);
           const isSelected = selectedId === entry.node.id;
-          const isDepOfSelected =
-            selectedDeps !== null && selectedDeps.has(entry.node.id);
+          const isDepOfSelected = selectedDeps?.has(entry.node.id);
           const showRemoveBtn = isDepOfSelected && hoveredId === entry.node.id;
 
           return (
@@ -1036,6 +1122,7 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
                 }}
               >
                 {/* Bar */}
+                {/* biome-ignore lint/a11y/useSemanticElements: custom-styled timeline bar cannot be a button element */}
                 <div
                   className={[
                     "timeline-bar",
@@ -1045,6 +1132,8 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
                     .filter(Boolean)
                     .join(" ")}
                   data-id={entry.node.id}
+                  role="button"
+                  tabIndex={0}
                   style={{
                     left: `${leftPct}%`,
                     width: `${widthPct}%`,
@@ -1054,15 +1143,21 @@ export function GraphView({ graph, onNodeSelect, removedEdges, addedEdges, onRem
                     e.stopPropagation();
                     handleClick(entry.node);
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleClick(entry.node);
+                    }
+                  }}
                   onMouseEnter={() => setHoveredId(entry.node.id)}
                   onMouseLeave={() => setHoveredId(null)}
                   title={`${entry.node.name}: ${formatMs(entry.durationMs)}`}
                 >
-                  <span className="timeline-bar-label">
-                    {entry.node.name}
-                  </span>
+                  <span className="timeline-bar-label">{entry.node.name}</span>
                   {showRemoveBtn && (
                     <button
+                      type="button"
                       className="remove-dep-btn"
                       onClick={(e) => {
                         e.stopPropagation();

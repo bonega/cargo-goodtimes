@@ -42,6 +42,9 @@ jobs:
       - name: Clippy
         run: nix develop --command cargo clippy -- -D warnings
 
+      - name: Biome lint
+        run: nix develop --command biome lint frontend/src/
+
   format:
     runs-on: ubuntu-latest
     steps:
@@ -55,8 +58,11 @@ jobs:
         with:
           use-flakehub: false
 
-      - name: Check formatting
+      - name: Check Rust formatting
         run: nix develop --command cargo fmt --check
+
+      - name: Check TypeScript formatting
+        run: nix develop --command biome format frontend/src/
 
   ci-success:
     runs-on: ubuntu-latest

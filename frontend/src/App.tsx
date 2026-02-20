@@ -1,8 +1,8 @@
-import { useCallback, useState, useMemo } from "react";
-import type { CrateNode } from "./lib/types.ts";
-import { useGraph } from "./hooks/useGraph.ts";
-import { GraphView } from "./components/GraphView.tsx";
+import { useCallback, useMemo, useState } from "react";
 import { DetailsPanel } from "./components/DetailsPanel.tsx";
+import { GraphView } from "./components/GraphView.tsx";
+import { useGraph } from "./hooks/useGraph.ts";
+import type { CrateNode } from "./lib/types.ts";
 
 export default function App() {
   const { graph, error } = useGraph();
@@ -29,45 +29,39 @@ export default function App() {
     setModifiedTotalMs(totalMs);
   }, []);
 
-  const handleRemoveEdge = useCallback(
-    (from: string, to: string) => {
-      const key = `${from}|${to}`;
-      setAddedEdges((prev) => {
-        if (prev.has(key)) {
-          const next = new Set(prev);
-          next.delete(key);
-          return next;
-        }
-        return prev;
-      });
-      setRemovedEdges((prev) => {
+  const handleRemoveEdge = useCallback((from: string, to: string) => {
+    const key = `${from}|${to}`;
+    setAddedEdges((prev) => {
+      if (prev.has(key)) {
         const next = new Set(prev);
-        next.add(key);
+        next.delete(key);
         return next;
-      });
-    },
-    [],
-  );
+      }
+      return prev;
+    });
+    setRemovedEdges((prev) => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+  }, []);
 
-  const handleAddEdge = useCallback(
-    (from: string, to: string) => {
-      const key = `${from}|${to}`;
-      setRemovedEdges((prev) => {
-        if (prev.has(key)) {
-          const next = new Set(prev);
-          next.delete(key);
-          return next;
-        }
-        return prev;
-      });
-      setAddedEdges((prev) => {
+  const handleAddEdge = useCallback((from: string, to: string) => {
+    const key = `${from}|${to}`;
+    setRemovedEdges((prev) => {
+      if (prev.has(key)) {
         const next = new Set(prev);
-        next.add(key);
+        next.delete(key);
         return next;
-      });
-    },
-    [],
-  );
+      }
+      return prev;
+    });
+    setAddedEdges((prev) => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+  }, []);
 
   const handleResetEdges = useCallback(() => {
     setRemovedEdges(new Set());
@@ -80,7 +74,10 @@ export default function App() {
   return (
     <div className="app">
       <main>
-        <div className="graph-container" style={hasChanges ? { paddingBottom: "3rem" } : undefined}>
+        <div
+          className="graph-container"
+          style={hasChanges ? { paddingBottom: "3rem" } : undefined}
+        >
           <GraphView
             graph={graph}
             onNodeSelect={setSelectedNode}
@@ -109,28 +106,35 @@ export default function App() {
             {removedEdges.size > 0 && addedEdges.size > 0 && ", "}
             {addedEdges.size > 0 && `${addedEdges.size} added`}
           </span>
-          {modifiedTotalMs !== null && (() => {
-            const deltaMs = modifiedTotalMs - originalTotalMs;
-            if (Math.abs(deltaMs) < 1) return null;
-            const absSec = (Math.abs(deltaMs) / 1000).toFixed(1);
-            const decreased = deltaMs < 0;
-            return (
-              <span
-                className={`critical-path-delta ${decreased ? "decreased" : "increased"}`}
-                style={{ visibility: previewOriginal ? "hidden" : "visible" }}
-              >
-                Critical path {decreased ? "decreased" : "increased"} by {absSec}s
-              </span>
-            );
-          })()}
+          {modifiedTotalMs !== null &&
+            (() => {
+              const deltaMs = modifiedTotalMs - originalTotalMs;
+              if (Math.abs(deltaMs) < 1) return null;
+              const absSec = (Math.abs(deltaMs) / 1000).toFixed(1);
+              const decreased = deltaMs < 0;
+              return (
+                <span
+                  className={`critical-path-delta ${decreased ? "decreased" : "increased"}`}
+                  style={{ visibility: previewOriginal ? "hidden" : "visible" }}
+                >
+                  Critical path {decreased ? "decreased" : "increased"} by{" "}
+                  {absSec}s
+                </span>
+              );
+            })()}
           <button
+            type="button"
             className="btn-compare"
             onMouseEnter={() => setPreviewOriginal(true)}
             onMouseLeave={() => setPreviewOriginal(false)}
           >
             Show Original
           </button>
-          <button className="btn-reset" onClick={handleResetEdges}>
+          <button
+            type="button"
+            className="btn-reset"
+            onClick={handleResetEdges}
+          >
             Reset
           </button>
         </div>
