@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo } from "preact/hooks";
 
 function parseEdgeParam(value: string, validNodeIds: Set<string>): Set<string> {
   const edges = new Set<string>();
