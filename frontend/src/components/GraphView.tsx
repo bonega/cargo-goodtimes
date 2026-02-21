@@ -103,6 +103,7 @@ interface Props {
   onRemoveEdge: (from: string, to: string) => void;
   previewOriginal: boolean;
   onTotalMsChange?: (totalMs: number) => void;
+  initialSelectedId?: string | null;
 }
 
 // Stable empty set reference to avoid infinite re-render loops when
@@ -304,11 +305,14 @@ export function GraphView({
   onRemoveEdge,
   previewOriginal,
   onTotalMsChange,
+  initialSelectedId,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialSelectedId ?? null,
+  );
 
   // When previewing original, use unmodified edges.
   const effectiveRemoved = previewOriginal ? EMPTY_STRING_SET : removedEdges;
