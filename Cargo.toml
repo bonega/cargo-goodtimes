@@ -3,26 +3,29 @@ name = "cargo-goodtimes"
 version = "0.3.0"
 edition = "2024"
 description = "Interactive compilation timing analyzer — visualizes the critical path as a Gantt chart"
-repository = "https://github.com/bonega/cargo-goodtimes"
 readme = "README.md"
-keywords = ["cargo", "build", "timing", "profiling", "compilation"]
-categories = ["development-tools::cargo-plugins", "development-tools::profiling"]
+repository = "https://github.com/bonega/cargo-goodtimes"
 license = "MIT"
+keywords = ["build", "cargo", "compilation", "profiling", "timing"]
+categories = [
+  "development-tools::cargo-plugins",
+  "development-tools::profiling"
+]
 exclude = [
-  "frontend/node_modules",
-  "frontend/src",
+  ".direnv",
+  ".envrc",
+  "bun.lock",
+  "flake.*",
+  "frontend/.gitignore",
+  "frontend/bun.lock",
   "frontend/index.html",
+  "frontend/node_modules",
   "frontend/package.json",
+  "frontend/src",
   "frontend/tsconfig.json",
   "frontend/vite.config.ts",
-  "frontend/bun.lock",
-  "frontend/.gitignore",
-  "bun.lock",
   "package.json",
   "screenshot.png",
-  ".envrc",
-  ".direnv",
-  "flake.*",
 ]
 
 [[bin]]
@@ -39,3 +42,6 @@ serde_json = "1"
 tracing = "0.1"
 tracing-subscriber = "0.3"
 webbrowser = "1"
+
+[dev-dependencies]
+cargo_metadata = { version = "0.19", features = ["builder"] }
