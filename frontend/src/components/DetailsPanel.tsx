@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "preact/hooks";
 import type { BuildGraph, CrateNode } from "../lib/types.ts";
 
 interface Props {
@@ -131,7 +131,7 @@ export function DetailsPanel({
   );
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+    (e: KeyboardEvent) => {
       if (!showSuggestions || suggestions.length === 0) return;
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -279,7 +279,7 @@ export function DetailsPanel({
           placeholder="Add dependency..."
           value={addQuery}
           onChange={(e) => {
-            setAddQuery(e.target.value);
+            setAddQuery((e.target as HTMLInputElement).value);
             setShowSuggestions(true);
             setHighlightIdx(-1);
           }}

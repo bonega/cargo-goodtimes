@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
 import { DetailsPanel } from "./components/DetailsPanel.tsx";
 import { GraphView } from "./components/GraphView.tsx";
 import { useGraph } from "./hooks/useGraph.ts";

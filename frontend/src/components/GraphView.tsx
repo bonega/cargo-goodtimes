@@ -5,7 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
-} from "react";
+} from "preact/hooks";
 import type { BuildGraph, CrateNode } from "../lib/types.ts";
 
 const ROW_HEIGHT = 28;
@@ -578,7 +578,9 @@ export function GraphView({
   // Animation state for critical path lines.
   const prevCriticalPathDataRef = useRef(new Map<string, string>());
   const criticalAnimFrameRef = useRef<number>(0);
-  const exitTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const [exitingPaths, setExitingPaths] = useState(
     new Map<string, { d: string; color: string }>(),
   );
@@ -1050,11 +1052,13 @@ export function GraphView({
                   data-key={line.key}
                   d={line.d}
                   stroke={COLOR_CRITICAL}
-                  strokeWidth={1}
-                  strokeOpacity={0.25}
-                  strokeDasharray="4 3"
                   fill="none"
-                  vectorEffect="non-scaling-stroke"
+                  {...{
+                    "stroke-width": 1,
+                    "stroke-opacity": 0.25,
+                    "stroke-dasharray": "4 3",
+                    "vector-effect": "non-scaling-stroke",
+                  }}
                 />
               ))}
               {[...depPathMap.entries()].map(([key, path]) => (
@@ -1064,10 +1068,12 @@ export function GraphView({
                   data-key={key}
                   d={path.d}
                   stroke={path.color}
-                  strokeWidth={1.5}
-                  strokeOpacity={0.7}
                   fill="none"
-                  vectorEffect="non-scaling-stroke"
+                  {...{
+                    "stroke-width": 1.5,
+                    "stroke-opacity": 0.7,
+                    "vector-effect": "non-scaling-stroke",
+                  }}
                 />
               ))}
               {[...exitingPaths.entries()].map(([key, path]) => (
@@ -1076,9 +1082,11 @@ export function GraphView({
                   className="dep-line dep-line-exit"
                   d={path.d}
                   stroke={path.color}
-                  strokeWidth={1.5}
                   fill="none"
-                  vectorEffect="non-scaling-stroke"
+                  {...{
+                    "stroke-width": 1.5,
+                    "vector-effect": "non-scaling-stroke",
+                  }}
                 />
               ))}
               {[...cpExitingPaths.entries()].map(([key, data]) => (
@@ -1088,11 +1096,13 @@ export function GraphView({
                   data-key={`exit-${key}`}
                   d={data.d}
                   stroke={COLOR_CRITICAL}
-                  strokeWidth={1}
-                  strokeOpacity={0.25}
-                  strokeDasharray="4 3"
                   fill="none"
-                  vectorEffect="non-scaling-stroke"
+                  {...{
+                    "stroke-width": 1,
+                    "stroke-opacity": 0.25,
+                    "stroke-dasharray": "4 3",
+                    "vector-effect": "non-scaling-stroke",
+                  }}
                 />
               ))}
             </svg>
