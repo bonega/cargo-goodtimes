@@ -1,11 +1,17 @@
+use cargo_metadata::Package;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, ops::Add};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct CrateId(String);
-impl From<String> for CrateId {
-    fn from(s: String) -> Self {
-        CrateId(s)
+impl From<&Package> for CrateId {
+    fn from(pkg: &Package) -> Self {
+        CrateId(format!("{}@{}", pkg.name, pkg.version))
+    }
+}
+impl From<&cargo_metadata::PackageId> for CrateId {
+    fn from(pkg_id: &cargo_metadata::PackageId) -> Self {
+        CrateId(pkg_id.repr.clone())
     }
 }
 #[derive(Debug, Clone, PartialEq, PartialOrd, Copy, Serialize, Deserialize)]

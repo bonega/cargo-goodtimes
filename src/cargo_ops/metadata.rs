@@ -19,12 +19,10 @@ pub fn load_dependency_graph(
 
     // Map PackageId to a short, path-free identifier.
     let short_id = |pkg_id: &PackageId| -> CrateId {
-        let pkg = pkg_map.get(pkg_id);
-        match pkg {
-            Some(p) => format!("{}@{}", p.name, p.version),
-            None => pkg_id.repr.clone(),
-        }
-        .into()
+        pkg_map
+            .get(pkg_id)
+            .and_then(|p| CrateId::from(*p).into())
+            .unwrap_or(CrateId::from(pkg_id))
     };
 
     let ws_members: HashSet<&PackageId> = metadata.workspace_members.iter().collect();
