@@ -1,0 +1,5 @@
+[tools]
+rust = "stable"
+
+[tasks.test]
+run = "cargo test"
