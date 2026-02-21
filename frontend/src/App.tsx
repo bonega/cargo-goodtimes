@@ -1,15 +1,35 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DetailsPanel } from "./components/DetailsPanel.tsx";
 import { GraphView } from "./components/GraphView.tsx";
 import { useGraph } from "./hooks/useGraph.ts";
+import { syncToHash, useHashState } from "./hooks/useHashState.ts";
 import type { CrateNode } from "./lib/types.ts";
 
 export default function App() {
   const { graph, error } = useGraph();
-  const [selectedNode, setSelectedNode] = useState<CrateNode | null>(null);
-  const [removedEdges, setRemovedEdges] = useState<Set<string>>(new Set());
-  const [addedEdges, setAddedEdges] = useState<Set<string>>(new Set());
+
+  const validNodeIds = useMemo(
+    () => new Set(graph ? Object.keys(graph.nodes) : []),
+    [graph],
+  );
+
+  const initialState = useHashState(validNodeIds);
+
+  const [selectedNode, setSelectedNode] = useState<CrateNode | null>(() => {
+    if (initialState.selectedNodeId && graph) {
+      return graph.nodes[initialState.selectedNodeId] ?? null;
+    }
+    return null;
+  });
+  const [removedEdges, setRemovedEdges] = useState(
+    () => initialState.removedEdges,
+  );
+  const [addedEdges, setAddedEdges] = useState(() => initialState.addedEdges);
   const [previewOriginal, setPreviewOriginal] = useState(false);
+
+  useEffect(() => {
+    syncToHash(selectedNode?.id ?? null, removedEdges, addedEdges);
+  }, [selectedNode, removedEdges, addedEdges]);
 
   const [modifiedTotalMs, setModifiedTotalMs] = useState<number | null>(null);
   const hasChanges = removedEdges.size > 0 || addedEdges.size > 0;
@@ -86,6 +106,7 @@ export default function App() {
             onRemoveEdge={handleRemoveEdge}
             previewOriginal={previewOriginal}
             onTotalMsChange={handleTotalMsChange}
+            initialSelectedId={initialState.selectedNodeId}
           />
         </div>
         <aside>
