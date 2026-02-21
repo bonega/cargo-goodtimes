@@ -349,7 +349,6 @@ aside {
 
 .remove-dep-btn {
   position: absolute;
-  right: 2px;
   top: 50%;
   transform: translateY(-50%);
   width: 18px;
@@ -365,7 +364,6 @@ aside {
   align-items: center;
   justify-content: center;
   z-index: 6;
-  pointer-events: auto;
 }
 
 .remove-dep-btn:hover {

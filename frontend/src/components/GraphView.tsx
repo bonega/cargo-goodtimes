@@ -1118,12 +1118,15 @@ export function GraphView({
               style={{ top, height: ROW_HEIGHT, opacity: isDimmed ? 0.25 : 1 }}
             >
               {/* Chart area */}
+              {/* biome-ignore lint/a11y/noStaticElementInteractions: hover tracking for remove button visibility */}
               <div
                 className="timeline-chart"
                 style={{
                   left: PADDING_LEFT,
                   right: PADDING_RIGHT,
                 }}
+                onMouseEnter={() => setHoveredId(entry.node.id)}
+                onMouseLeave={() => setHoveredId(null)}
               >
                 {/* Bar */}
                 {/* biome-ignore lint/a11y/useSemanticElements: custom-styled timeline bar cannot be a button element */}
@@ -1154,25 +1157,26 @@ export function GraphView({
                       handleClick(entry.node);
                     }
                   }}
-                  onMouseEnter={() => setHoveredId(entry.node.id)}
-                  onMouseLeave={() => setHoveredId(null)}
                   title={`${entry.node.name}: ${formatMs(entry.durationMs)}`}
                 >
                   <span className="timeline-bar-label">{entry.node.name}</span>
-                  {showRemoveBtn && (
-                    <button
-                      type="button"
-                      className="remove-dep-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemoveEdge(selectedId!, entry.node.id);
-                      }}
-                      title="Remove this dependency (what-if analysis)"
-                    >
-                      ×
-                    </button>
-                  )}
                 </div>
+                {showRemoveBtn && (
+                  <button
+                    type="button"
+                    className="remove-dep-btn"
+                    style={{
+                      left: `calc(${leftPct + widthPct}% + 4px)`,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveEdge(selectedId!, entry.node.id);
+                    }}
+                    title="Remove this dependency (what-if analysis)"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
             </div>
           );
