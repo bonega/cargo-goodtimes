@@ -56,18 +56,24 @@ pub fn load_dependency_graph(
 
         for dep in &node.deps {
             let dep_included = include_deps || ws_members.contains(&dep.pkg);
-            if dep_included {
-                let dep_kinds: Vec<String> = dep
-                    .dep_kinds
-                    .iter()
-                    .map(|dk| format!("{:?}", dk.kind))
-                    .collect();
-                edges.push(DepEdge {
-                    from: crate_id.clone(),
-                    to: short_id(&dep.pkg),
-                    dep_kinds,
-                });
+            if !dep_included {
+                continue;
             }
+            let dep_kinds: Vec<String> = dep
+                .dep_kinds
+                .iter()
+                .map(|dk| format!("{:?}", dk.kind))
+                .collect();
+            // Skip pure dev-dependency edges — they don't affect compilation
+            // order and can introduce cycles.
+            if dep_kinds.iter().all(|k| k == "Development") {
+                continue;
+            }
+            edges.push(DepEdge {
+                from: crate_id.clone(),
+                to: short_id(&dep.pkg),
+                dep_kinds,
+            });
         }
     }
 
